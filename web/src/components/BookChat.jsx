@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { friendly } from '../lib/errors';
+import Avatar from './Avatar.jsx';
 
-// Discussion for one book. Guests can read while the book is approved; posting needs a verified member.
+// Discussion for one book. Reads are plain table queries; the server checks every post.
 export default function BookChat({ bookId, canPost }) {
   const [messages, setMessages] = useState(null);
   const [body, setBody] = useState('');
@@ -10,9 +11,9 @@ export default function BookChat({ bookId, canPost }) {
   const [message, setMessage] = useState(null);
 
   async function load() {
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from('book_chat_messages')
-      .select('id, body, created_at, profiles(username)')
+      .select('id, body, created_at, user_id')
       .eq('book_id', bookId)
       .eq('hidden', false)
       .order('created_at', { ascending: false })
@@ -21,7 +22,14 @@ export default function BookChat({ bookId, canPost }) {
       setMessage({ type: 'error', text: 'The discussion could not be loaded.' });
       return;
     }
-    setMessages(data ?? []);
+    const ids = [...new Set((rows ?? []).map((r) => r.user_id))];
+    const people = {};
+    if (ids.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles').select('id, username, avatar_url').in('id', ids);
+      (profiles ?? []).forEach((p) => { people[p.id] = p; });
+    }
+    setMessages((rows ?? []).map((r) => ({ ...r, person: people[r.user_id] ?? null })));
   }
 
   useEffect(() => { load(); }, [bookId]);
@@ -63,7 +71,7 @@ export default function BookChat({ bookId, canPost }) {
           <p><button type="submit" disabled={busy || !body.trim()}>{busy ? 'Posting…' : 'Post'}</button></p>
         </form>
       ) : (
-        <p className="card muted">Sign in and verify your email to join the discussion.</p>
+        <p className="card muted">Sign in to join the discussion.</p>
       )}
 
       {message && <p role="status" className={message.type === 'error' ? 'error' : 'ok'}>{message.text}</p>}
@@ -71,10 +79,12 @@ export default function BookChat({ bookId, canPost }) {
       {messages?.length === 0 && <p className="muted">No comments yet.</p>}
       {messages?.map((m) => (
         <div key={m.id} className="chat-message">
-          <div className="chat-meta">
-            <strong>{m.profiles?.username ?? 'Member'}</strong> · {new Date(m.created_at).toLocaleString()}
+          <div className="chat-meta" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+            <Avatar url={m.person?.avatar_url} name={m.person?.username} size={28} />
+            <strong>{m.person?.username ?? 'Member'}</strong>
+            <span>· {new Date(m.created_at).toLocaleString()}</span>
             {canPost && (
-              <> · <button type="button" className="btn-small" onClick={() => report(m.id)}>Report</button></>
+              <button type="button" className="btn-small" onClick={() => report(m.id)}>Report</button>
             )}
           </div>
           <div>{m.body}</div>
