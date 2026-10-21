@@ -10,7 +10,7 @@ export default function Home() {
   useEffect(() => {
     supabase
       .from('books')
-      .select('id, title, synopsis, created_at')
+      .select('id, title, synopsis, cover_url, created_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .then(({ data, error: err }) => {
@@ -34,6 +34,7 @@ export default function Home() {
       <div className="grid">
         {books?.map((b) => (
           <Link key={b.id} to={`/book/${b.id}`} className="card book-card">
+            {b.cover_url && <img src={b.cover_url} alt={`Cover of ${b.title}`} className="cover" />}
             <h3>{b.title}</h3>
             <p className="muted">{b.synopsis ? b.synopsis.slice(0, 140) : 'No synopsis yet.'}</p>
           </Link>
