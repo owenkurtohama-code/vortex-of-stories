@@ -110,3 +110,8 @@ textarea { min-height: 7rem; resize: vertical; }
   * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   .vortex-canvas { display: none; }   /* the artwork stays as a still image */
 }
+/* ---------- Pictures ---------- */
+.avatar { border-radius: 50%; object-fit: cover; flex: none; display: inline-block; vertical-align: middle; }
+.avatar-fallback { background: var(--surface-2); color: var(--accent-strong); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.cover { display: block; width: 100%; max-width: 220px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: var(--radius); margin-bottom: .75rem; }
+.cover-large { max-width: 280px; }
