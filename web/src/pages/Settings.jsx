@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
+import { checkImage, uploadImage } from '../lib/media';
+import Avatar from '../components/Avatar.jsx';
 
 const PROVIDERS = [
   { key: 'paypal', label: 'PayPal', example: 'https://paypal.me/yourname' },
@@ -17,6 +19,7 @@ export default function Settings() {
   const [links, setLinks] = useState([]);
   const [newLink, setNewLink] = useState({ provider: 'kofi', url: '' });
   const [confirmText, setConfirmText] = useState('');
+  const [avatarFile, setAvatarFile] = useState(null);
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -32,6 +35,23 @@ export default function Settings() {
   useEffect(() => { loadLinks(); }, [user]);
 
   if (!user) return <p className="card">Please <a href="#/login">sign in</a> to manage your account.</p>;
+
+  async function saveAvatar(e) {
+    e.preventDefault();
+    setMessage(null);
+    const problem = checkImage(avatarFile, 'avatars');
+    if (problem) { setMessage({ type: 'error', text: problem }); return; }
+    try {
+      const url = await uploadImage('avatars', user.id, 'avatar', avatarFile);
+      const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id);
+      if (error) throw error;
+      setAvatarFile(null);
+      setMessage({ type: 'ok', text: 'Profile picture saved.' });
+      refreshAccount();
+    } catch {
+      setMessage({ type: 'error', text: 'The picture could not be saved. Please try again.' });
+    }
+  }
 
   async function saveProfile(e) {
     e.preventDefault();
@@ -97,7 +117,20 @@ export default function Settings() {
 
       <section className="card">
         <h2>Profile</h2>
-        <p className="muted">Username: <strong>{profile?.username}</strong> (cannot be changed)</p>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
+          <Avatar url={profile?.avatar_url} name={profile?.username} size={80} />
+          <div>
+            <p className="muted" style={{ margin: 0 }}>Username: <strong>{profile?.username}</strong> (cannot be changed)</p>
+          </div>
+        </div>
+
+        <form onSubmit={saveAvatar} style={{ marginBottom: '1.5rem' }}>
+          <label htmlFor="avatar">Profile picture (JPG, PNG or WebP, up to 2 MB)</label>
+          <input id="avatar" type="file" accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)} />
+          <p><button type="submit" disabled={!avatarFile}>Upload picture</button></p>
+        </form>
+
         <form onSubmit={saveProfile}>
           <label htmlFor="dn">Display name</label>
           <input id="dn" maxLength={60} value={form.display_name}
