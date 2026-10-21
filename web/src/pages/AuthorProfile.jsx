@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
+import Avatar from '../components/Avatar.jsx';
 
 const PROVIDER_LABELS = { paypal: 'PayPal', kofi: 'Ko-fi', patreon: 'Patreon' };
 
@@ -42,12 +43,17 @@ export default function AuthorProfile() {
     load();
   }
 
+  const PROVIDER_LABEL = PROVIDER_LABELS;
+
   return (
     <article>
       <div className="author-head">
-        <div>
-          <h1>{author.display_name || author.username}</h1>
-          <p className="muted">@{author.username} · {author.followers} {author.followers === 1 ? 'follower' : 'followers'}</p>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <Avatar url={author.avatar_url} name={author.username} size={96} />
+          <div>
+            <h1>{author.display_name || author.username}</h1>
+            <p className="muted">@{author.username} · {author.followers} {author.followers === 1 ? 'follower' : 'followers'}</p>
+          </div>
         </div>
         {canFollow && (
           <button type="button" className={author.you_follow ? 'btn-secondary' : ''} onClick={toggleFollow}>
@@ -66,7 +72,7 @@ export default function AuthorProfile() {
           <div className="support-links">
             {author.support_links.map((l) => (
               <a key={l.provider} className="btn btn-secondary" href={l.url} target="_blank" rel="noopener noreferrer">
-                {PROVIDER_LABELS[l.provider] ?? l.provider}
+                {PROVIDER_LABEL[l.provider] ?? l.provider}
               </a>
             ))}
           </div>
@@ -79,6 +85,7 @@ export default function AuthorProfile() {
       <div className="grid">
         {author.books?.map((b) => (
           <Link key={b.id} to={`/book/${b.id}`} className="card book-card">
+            {b.cover_url && <img src={b.cover_url} alt={`Cover of ${b.title}`} className="cover" />}
             <h3>{b.title}</h3>
             <p className="muted">{b.synopsis ? b.synopsis.slice(0, 140) : 'No synopsis yet.'}</p>
           </Link>
