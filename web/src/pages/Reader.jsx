@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
 
 export default function Reader() {
   const { chapterId } = useParams();
+  const { user, isVerified } = useSession();
   const [chapter, setChapter] = useState(null);
   const [index, setIndex] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -26,6 +28,13 @@ export default function Reader() {
     })();
     return () => { active = false; };
   }, [chapterId]);
+
+  // Remember the reading position for verified members. Failure here must never block reading.
+  useEffect(() => {
+    if (status === 'ready' && chapter && user && isVerified) {
+      supabase.rpc('save_reading_progress', { p_chapter: chapter.chapter_id }).then(() => {});
+    }
+  }, [status, chapter, user, isVerified]);
 
   if (status === 'loading') return <p role="status">Loading chapter…</p>;
   if (status === 'locked') {
@@ -49,6 +58,7 @@ export default function Reader() {
       <div className="reader-body">{chapter.chapter_body}</div>
       <nav aria-label="Chapter navigation" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
         {prev ? <Link to={`/read/${prev.chapter_id}`}>← Previous chapter</Link> : <span />}
+        <Link to={`/book/${chapter.book_id}`}>Contents</Link>
         {next ? <Link to={`/read/${next.chapter_id}`}>Next chapter →</Link> : <span />}
       </nav>
     </article>
