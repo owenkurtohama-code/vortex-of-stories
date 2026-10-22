@@ -24,17 +24,22 @@ export default function Book() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data: b } = await supabase
+      const { data: b, error: bookError } = await supabase
         .from('books')
         .select('id, title, synopsis, cover_url, author_id, profiles(username, avatar_url)')
         .eq('id', bookId)
         .maybeSingle();
       if (!active) return;
+      // Report the real error, so a failed request is never mistaken for a missing book.
+      if (bookError) {
+        setStatus(`This story could not be loaded. Error ${bookError.code ?? ''}: ${bookError.message}`);
+        return;
+      }
       if (!b) { setStatus('missing'); return; }
       setBook(b);
       const { data: index, error } = await supabase.rpc('book_chapter_index', { p_book: bookId });
       if (!active) return;
-      if (error) { setStatus(friendly(error)); return; }
+      if (error) { setStatus(`The chapter list could not be loaded. Error ${error.code ?? ''}: ${error.message}`); return; }
       setChapters(index ?? []);
       setStatus('ready');
     })();
@@ -91,9 +96,7 @@ export default function Book() {
       {book.cover_url && <img src={book.cover_url} alt={`Cover of ${book.title}`} className="cover cover-large" />}
       <h1>{book.title}</h1>
       {authorName && (
-        <p className="muted" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-          By <Link to={`/author/${authorName}`}>{authorName}</Link>
-        </p>
+        <p className="muted">By <Link to={`/author/${authorName}`}>{authorName}</Link></p>
       )}
       <p>{book.synopsis}</p>
 
