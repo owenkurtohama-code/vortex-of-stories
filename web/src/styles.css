@@ -115,3 +115,30 @@ textarea { min-height: 7rem; resize: vertical; }
 .avatar-fallback { background: var(--surface-2); color: var(--accent-strong); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
 .cover { display: block; width: 100%; max-width: 220px; aspect-ratio: 2 / 3; object-fit: cover; border-radius: var(--radius); margin-bottom: .75rem; }
 .cover-large { max-width: 280px; }
+/* Add this to the END of web/src/styles.css */
+
+/* ---------- Chat layout: your messages on the right, others on the left ---------- */
+.chat-list { display: flex; flex-direction: column; gap: .75rem; margin-top: 1rem; }
+.chat-row { display: flex; align-items: flex-end; gap: .6rem; max-width: 85%; }
+.chat-row.own { align-self: flex-end; flex-direction: row-reverse; }
+.chat-bubble {
+  background: var(--surface-2);
+  border-radius: 14px 14px 14px 4px;
+  padding: .6rem .8rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.chat-row.own .chat-bubble {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 14px 14px 4px 14px;
+}
+.chat-row.own .chat-meta,
+.chat-row.own .chat-meta span { color: rgba(255, 255, 255, .85); }
+.chat-row.own .chat-report { display: none; }
+.chat-meta { font-size: .85rem; color: var(--muted); margin-bottom: .2rem; }
+.chat-text { white-space: pre-wrap; }
+.chat-report { margin-top: .4rem; }
+@media (max-width: 480px) {
+  .chat-row { max-width: 100%; }
+}
