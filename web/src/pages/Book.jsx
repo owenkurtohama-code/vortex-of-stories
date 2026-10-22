@@ -15,6 +15,7 @@ export default function Book() {
   const { bookId } = useParams();
   const { user, isVerified } = useSession();
   const [book, setBook] = useState(null);
+  const [author, setAuthor] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [status, setStatus] = useState('loading');
   const [shelf, setShelf] = useState(null);
@@ -24,22 +25,35 @@ export default function Book() {
   useEffect(() => {
     let active = true;
     (async () => {
+      // Step 1: the book itself. No embedded relationships, so nothing can be ambiguous.
       const { data: b, error: bookError } = await supabase
         .from('books')
-        .select('id, title, synopsis, cover_url, author_id, profiles(username, avatar_url)')
+        .select('id, title, synopsis, cover_url, author_id')
         .eq('id', bookId)
         .maybeSingle();
       if (!active) return;
-      // Report the real error, so a failed request is never mistaken for a missing book.
       if (bookError) {
         setStatus(`This story could not be loaded. Error ${bookError.code ?? ''}: ${bookError.message}`);
         return;
       }
       if (!b) { setStatus('missing'); return; }
-      setBook(b);
+
+      // Step 2: the author's public name and picture, looked up separately.
+      const { data: a } = await supabase
+        .from('profiles').select('id, username, avatar_url')
+        .eq('id', b.author_id).maybeSingle();
+      if (!active) return;
+
+      // Step 3: the chapter list.
       const { data: index, error } = await supabase.rpc('book_chapter_index', { p_book: bookId });
       if (!active) return;
-      if (error) { setStatus(`The chapter list could not be loaded. Error ${error.code ?? ''}: ${error.message}`); return; }
+      if (error) {
+        setStatus(`The chapter list could not be loaded. Error ${error.code ?? ''}: ${error.message}`);
+        return;
+      }
+
+      setBook(b);
+      setAuthor(a ?? null);
       setChapters(index ?? []);
       setStatus('ready');
     })();
@@ -66,7 +80,7 @@ export default function Book() {
 
   const fullAccess = Boolean(user) && isVerified;
   const isOwnBook = user && book.author_id === user.id;
-  const authorName = book.profiles?.username;
+  const authorName = author?.username;
 
   async function setShelfTo(key) {
     setMessage(null);
