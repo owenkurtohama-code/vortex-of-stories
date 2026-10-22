@@ -4,10 +4,60 @@ import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/session.jsx';
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
+const CODE_RE = /^\d{6}$/;
 
-// Address the verification and reset emails should return to (the site itself, without the #hash).
+// Address the password-reset email should return to (the site itself, without the #hash).
 function siteUrl() {
   return window.location.origin + window.location.pathname;
+}
+
+// Six-digit code entry, used after registration and when an unverified member signs in.
+function CodeEntry({ email, onVerified }) {
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  async function verify(e) {
+    e.preventDefault();
+    setMessage(null);
+    if (!CODE_RE.test(code.trim())) {
+      setMessage({ type: 'error', text: 'Enter the 6-digit code from your email.' });
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: 'signup' });
+    setBusy(false);
+    if (error) {
+      setMessage({ type: 'error', text: 'That code is not correct or has expired. Check it, or send a new one.' });
+      return;
+    }
+    onVerified();
+  }
+
+  async function resend() {
+    setMessage(null);
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    setMessage(error
+      ? { type: 'error', text: 'A new code could not be sent. Please wait a minute and try again.' }
+      : { type: 'ok', text: 'A new code has been sent to your email.' });
+  }
+
+  return (
+    <section className="card" style={{ maxWidth: 480, margin: '0 auto' }}>
+      <h1>Enter your verification code</h1>
+      <p className="muted">We sent a 6-digit code to <strong>{email}</strong>. Type it below to verify your account.</p>
+      <form onSubmit={verify}>
+        <label htmlFor="otp">Verification code</label>
+        <input id="otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+          value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+        <p>
+          <button type="submit" disabled={busy}>{busy ? 'Checking…' : 'Verify account'}</button>{' '}
+          <button type="button" className="btn-secondary" onClick={resend}>Send a new code</button>
+        </p>
+      </form>
+      {message && <p role="status" className={message.type === 'error' ? 'error' : 'ok'}>{message.text}</p>}
+    </section>
+  );
 }
 
 export function Login() {
@@ -16,17 +66,27 @@ export function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
+  const [pendingEmail, setPendingEmail] = useState(null);
 
   if (user) return <Navigate to="/" replace />;
+
+  if (pendingEmail) {
+    return <CodeEntry email={pendingEmail} onVerified={() => navigate('/')} />;
+  }
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setMessage(null);
-    const { error } = await supabase.auth.signInWithPassword({ email: form.email.trim(), password: form.password });
+    const email = form.email.trim();
+    const { error } = await supabase.auth.signInWithPassword({ email, password: form.password });
     setBusy(false);
     if (error) {
-      setMessage({ type: 'error', text: 'Sign-in failed. Check your email and password. If you just registered, verify your email first.' });
+      if (/not confirmed/i.test(error.message)) {
+        setPendingEmail(email);
+        return;
+      }
+      setMessage({ type: 'error', text: 'Sign-in failed. Check your email and password.' });
       return;
     }
     navigate('/');
@@ -38,7 +98,6 @@ export function Login() {
       return;
     }
     await supabase.auth.resetPasswordForEmail(form.email.trim(), { redirectTo: siteUrl() });
-    // Same message whether or not the account exists (prevents account enumeration).
     setMessage({ type: 'ok', text: 'If an account exists for that email, a reset link has been sent.' });
   }
 
@@ -64,9 +123,15 @@ export function Login() {
 }
 
 export function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [pendingEmail, setPendingEmail] = useState(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
+
+  if (pendingEmail) {
+    return <CodeEntry email={pendingEmail} onVerified={() => navigate('/')} />;
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -80,17 +145,18 @@ export function Register() {
       return;
     }
     setBusy(true);
+    const email = form.email.trim();
     const { error } = await supabase.auth.signUp({
-      email: form.email.trim(),
+      email,
       password: form.password,
-      options: { data: { username: form.username }, emailRedirectTo: siteUrl() },
+      options: { data: { username: form.username } },
     });
     setBusy(false);
     if (error) {
       setMessage({ type: 'error', text: 'Registration could not be completed. The username or email may already be in use.' });
       return;
     }
-    setMessage({ type: 'ok', text: 'Account created. Open the verification link in your email. Member features unlock after verification.' });
+    setPendingEmail(email);
   }
 
   return (
