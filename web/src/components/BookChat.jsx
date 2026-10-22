@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
 import Avatar from './Avatar.jsx';
 
-// Discussion for one book. Reads are plain table queries; the server checks every post.
+// Discussion for one book. Your own comments appear on the right; everyone else's on the left.
 export default function BookChat({ bookId, canPost }) {
+  const { user } = useSession();
   const [messages, setMessages] = useState(null);
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,7 +31,8 @@ export default function BookChat({ bookId, canPost }) {
         .from('profiles').select('id, username, avatar_url').in('id', ids);
       (profiles ?? []).forEach((p) => { people[p.id] = p; });
     }
-    setMessages((rows ?? []).map((r) => ({ ...r, person: people[r.user_id] ?? null })));
+    // Oldest first, so the conversation reads top to bottom.
+    setMessages((rows ?? []).map((r) => ({ ...r, person: people[r.user_id] ?? null })).reverse());
   }
 
   useEffect(() => { load(); }, [bookId]);
@@ -77,19 +80,27 @@ export default function BookChat({ bookId, canPost }) {
       {message && <p role="status" className={message.type === 'error' ? 'error' : 'ok'}>{message.text}</p>}
       {messages === null && <p role="status">Loading discussion…</p>}
       {messages?.length === 0 && <p className="muted">No comments yet.</p>}
-      {messages?.map((m) => (
-        <div key={m.id} className="chat-message">
-          <div className="chat-meta" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-            <Avatar url={m.person?.avatar_url} name={m.person?.username} size={28} />
-            <strong>{m.person?.username ?? 'Member'}</strong>
-            <span>· {new Date(m.created_at).toLocaleString()}</span>
-            {canPost && (
-              <button type="button" className="btn-small" onClick={() => report(m.id)}>Report</button>
-            )}
-          </div>
-          <div>{m.body}</div>
-        </div>
-      ))}
+
+      <div className="chat-list">
+        {messages?.map((m) => {
+          const own = Boolean(user) && m.user_id === user.id;
+          return (
+            <div key={m.id} className={`chat-row${own ? ' own' : ''}`}>
+              <Avatar url={m.person?.avatar_url} name={m.person?.username} size={32} />
+              <div className="chat-bubble">
+                <div className="chat-meta">
+                  <strong>{own ? 'You' : (m.person?.username ?? 'Member')}</strong>
+                  <span> · {new Date(m.created_at).toLocaleString()}</span>
+                </div>
+                <div className="chat-text">{m.body}</div>
+                {user && !own && (
+                  <button type="button" className="btn-small chat-report" onClick={() => report(m.id)}>Report</button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
