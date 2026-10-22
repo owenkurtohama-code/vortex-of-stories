@@ -144,21 +144,25 @@ export default function Book() {
       <h2>Chapters</h2>
       {chapters.length === 0 && <p className="muted">No published chapters yet.</p>}
       <ol>
-        {chapters.map((c) => {
-          const readable = fullAccess || c.in_guest_preview;
-          return (
-            <li key={c.chapter_id} style={{ margin: '.5rem 0' }}>
-              {readable ? (
+        {chapters.map((c) => (
+          <li key={c.chapter_id} style={{ margin: '.5rem 0' }}>
+            {c.can_read ? (
+              <>
                 <Link to={`/read/${c.chapter_id}`}>{c.chapter_title}</Link>
-              ) : (
-                <span>
-                  {c.chapter_title}{' '}
-                  <span className="status">{user ? 'Verify your email to read' : 'Sign in to continue reading'}</span>
+                {c.premium_only && <span className="status" style={{ marginLeft: '.5rem' }}>Premium</span>}
+              </>
+            ) : (
+              <span>
+                {c.chapter_title}{' '}
+                <span className="status">
+                  {c.premium_only
+                    ? 'Premium members only'
+                    : user ? 'Verify your email to read' : 'Sign in to continue reading'}
                 </span>
-              )}
-            </li>
-          );
-        })}
+              </span>
+            )}
+          </li>
+        ))}
       </ol>
 
       {!fullAccess && (
