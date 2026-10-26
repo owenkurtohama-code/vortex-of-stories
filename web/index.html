@@ -2,10 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Vortex of Stories - read, write and discuss stories." />
+    <meta name="theme-color" content="#17131f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Vortex" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="icon" type="image/jpeg" href="./favicon.jpg" />
     <title>Vortex of Stories</title>
+    <script>
+      // Keep the browser's install offer so the site can show its own button.
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.deferredPrompt = e;
+        window.dispatchEvent(new Event('vortex-install-ready'));
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
