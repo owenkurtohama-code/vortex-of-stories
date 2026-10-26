@@ -19,6 +19,7 @@ const MESSAGES = {
   insufficient_coins: 'You do not have enough coins for that.',
   unsupported_spend: 'That purchase is not available right now.',
   invalid_request_key: 'Something went wrong with that request. Please try again.',
+  daily_reward_unavailable: 'The daily reward is not available right now.',
   invalid_shelf: 'Please choose a valid shelf.',
   author_only: 'Only authors with an approved book can add support links.',
   invalid_provider: 'Please choose PayPal, Ko-fi, or Patreon.',
@@ -38,13 +39,25 @@ const MESSAGES = {
   account_has_books: 'Your account has books, so it cannot be deleted yet. Contact the administrators.',
   account_has_purchases: 'Your account has purchase history, so it cannot be deleted yet. Contact the administrators.',
   account_has_coin_history: 'Your account has coin history, so it cannot be deleted yet. Contact the administrators.',
+  'avatar must be uploaded through the site': 'Pictures must be uploaded through the site.',
+  'cover must be uploaded through the site': 'Covers must be uploaded through the site.',
+  title_confirmation_mismatch: 'The title you typed does not match. The book was not deleted.',
+  title_invalid: 'Please enter a title of up to 200 characters.',
+  credit_required: 'Please enter the name to credit on the book.',
+  invalid_access: 'Please choose Public or Premium.',
+  riddle_closed: 'This riddle has already closed.',
+  riddle_not_found: 'That riddle could not be found.',
+  riddle_not_open: 'That riddle is already closed.',
+  question_invalid: 'Please enter a question of up to 500 characters.',
+  limit_invalid: 'The winner limit must be between 1 and 100.',
+  answer_required: 'Please enter an answer.',
   'book must be approved': 'Chapters can be published only after the book is approved.',
   'author cannot be changed': 'That change is not allowed.',
   'status change not permitted': 'That status change is not allowed.',
   'review reason is set by administrators': 'Only administrators can set a review reason.',
 };
 
-// Longer keys are checked first so that, for example, "user_not_found" is not read as "not_found".
+// Longer keys are checked first, so that for example "user_not_found" is not read as "not_found".
 const KEYS = Object.keys(MESSAGES).sort((a, b) => b.length - a.length);
 
 export function friendly(error) {
