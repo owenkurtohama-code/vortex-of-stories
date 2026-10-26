@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
+import RiddleAdmin from '../components/RiddleAdmin.jsx';
 
 // Visibility here is cosmetic. Every action is enforced again on the server (is_admin()).
 
@@ -149,6 +150,7 @@ export default function Admin() {
   return (
     <section>
       <h1>Administration</h1>
+      <RiddleAdmin />
       {message && <p role="status" className={message.type === 'error' ? 'error' : 'ok'}>{message.text}</p>}
 
       <section className="card">
