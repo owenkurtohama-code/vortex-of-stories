@@ -1,17 +1,18 @@
 import { HashRouter, Routes, Route, Link, NavLink, Navigate } from 'react-router-dom';
 import { useSession } from './lib/session.jsx';
 import VortexBackground from './components/VortexBackground.jsx';
-import Home from './pages/Home.jsx';                           // Part 3
-import Book from './pages/Book.jsx';                           // Part 4
-import Reader from './pages/Reader.jsx';                       // Part 3
-import { Login, Register, ResetPassword } from './pages/Auth.jsx'; // Part 3
-import Premium from './pages/Premium.jsx';                     // Part 3
-import Chat from './pages/Chat.jsx';                           // Part 3
-import Studio from './pages/Studio.jsx';                       // Part 3
-import Admin from './pages/Admin.jsx';                         // Part 4
-import Library from './pages/Library.jsx';                     // Part 4
-import AuthorProfile from './pages/AuthorProfile.jsx';         // Part 4
-import Settings from './pages/Settings.jsx';                   // Part 4
+import InstallApp from './components/InstallApp.jsx';
+import Home from './pages/Home.jsx';
+import Book from './pages/Book.jsx';
+import Reader from './pages/Reader.jsx';
+import { Login, Register, ResetPassword } from './pages/Auth.jsx';
+import Premium from './pages/Premium.jsx';
+import Chat from './pages/Chat.jsx';
+import Studio from './pages/Studio.jsx';
+import Admin from './pages/Admin.jsx';
+import Library from './pages/Library.jsx';
+import AuthorProfile from './pages/AuthorProfile.jsx';
+import Settings from './pages/Settings.jsx';
 
 function Header() {
   const { user, profile, premium, signOut } = useSession();
@@ -27,6 +28,7 @@ function Header() {
         {profile?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
       </nav>
       <div className="account">
+        <InstallApp />
         {user ? (
           <>
             <NavLink to="/settings">{profile?.username ?? 'Account'}</NavLink>
