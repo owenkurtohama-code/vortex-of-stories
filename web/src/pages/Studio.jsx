@@ -3,11 +3,12 @@ import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
 import { checkImage, uploadImage } from '../lib/media';
+import GeneralBookForm from '../components/GeneralBookForm.jsx';
 
 const EMPTY_CHAPTER = { title: '', body: '', premium_only: false };
 
 export default function Studio() {
-  const { user, isVerified } = useSession();
+  const { user, isVerified, profile } = useSession();
   const [books, setBooks] = useState([]);
   const [current, setCurrent] = useState(null);
   const [chapters, setChapters] = useState([]);
@@ -90,6 +91,20 @@ export default function Studio() {
     loadBooks();
   }
 
+  // Deletes a whole book after the member types its exact title.
+  async function deleteBook(b) {
+    setMessage(null);
+    const typed = window.prompt(
+      `This permanently deletes "${b.title}" with all its chapters, comments and reader progress. It cannot be undone.\n\nType the exact title to confirm:`
+    );
+    if (typed === null) return;
+    const { error } = await supabase.rpc('delete_my_book', { p_book: b.id, p_confirm: typed });
+    if (error) { setMessage({ type: 'error', text: friendly(error) }); return; }
+    if (current?.id === b.id) { setCurrent(null); setChapters([]); }
+    setMessage({ type: 'ok', text: `"${b.title}" has been deleted.` });
+    loadBooks();
+  }
+
   function openBook(b) {
     setCurrent(b);
     setEditingId(null);
@@ -168,25 +183,38 @@ export default function Studio() {
         <p><button type="submit">Create book (saved as draft)</button></p>
       </form>
 
+      {profile?.role === 'admin' && <GeneralBookForm onCreated={loadBooks} />}
+
       <h2>Your books</h2>
       {books.length === 0 && <p className="muted">You have not created any books yet.</p>}
-      <ul>
+      <ul className="book-list">
         {books.map((b) => (
-          <li key={b.id} className="card" style={{ listStyle: 'none' }}>
+          <li key={b.id} className="card book-item">
             {b.cover_url && <img src={b.cover_url} alt={`Cover of ${b.title}`} className="cover" />}
-            <strong>{b.title}</strong> <span className="status">{b.status.replace('_', ' ')}</span>
+            <div className="book-head">
+              <strong>{b.title}</strong>
+              <span className="status">{b.status.replace('_', ' ')}</span>
+            </div>
             {b.status === 'rejected' && b.review_reason && <p className="error">Reason: {b.review_reason}</p>}
-            <p>
+
+            <div className="action-row">
+              <button type="button" className="btn" onClick={() => openBook(b)}>Manage chapters</button>
               {(b.status === 'draft' || b.status === 'rejected') && (
-                <button type="button" className="btn-small" onClick={() => submitForReview(b.id)}>Submit for review</button>
-              )}{' '}
-              <button type="button" className="btn-small" onClick={() => openBook(b)}>Manage chapters</button>{' '}
-              <label className="btn-small" style={{ display: 'inline-block', cursor: 'pointer', padding: '.3rem .7rem' }}>
+                <button type="button" className="btn-secondary" onClick={() => submitForReview(b.id)}>Submit for review</button>
+              )}
+            </div>
+
+            <div className="action-row">
+              <label className="btn-secondary btn-file">
                 Change cover
                 <input type="file" accept="image/jpeg,image/png,image/webp" hidden
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) changeCover(b.id, f); e.target.value = ''; }} />
               </label>
-            </p>
+            </div>
+
+            <div className="action-row action-danger">
+              <button type="button" className="btn-danger" onClick={() => deleteBook(b)}>Delete book</button>
+            </div>
           </li>
         ))}
       </ul>
@@ -196,19 +224,23 @@ export default function Studio() {
           <h2>Chapters of “{current.title}”</h2>
           <p className="muted">Chapters can be published only after the book is approved. Changes to a published chapter appear to readers straight away.</p>
 
-          <ol>
+          <ol className="chapter-list">
             {chapters.map((c) => (
-              <li key={c.id} style={{ margin: '.6rem 0' }}>
-                {c.title}{' '}
-                <span className="status">{c.published ? 'published' : 'draft'}</span>{' '}
-                <span className="status">{c.premium_only ? 'Premium only' : 'Free'}</span>{' '}
-                <button type="button" className="btn-small" onClick={() => startEdit(c)}>Edit</button>{' '}
-                <button type="button" className="btn-small" onClick={() => togglePublish(c)}>
-                  {c.published ? 'Unpublish' : 'Publish'}
-                </button>{' '}
-                <button type="button" className="btn-small" onClick={() => togglePremium(c)}>
-                  {c.premium_only ? 'Make free' : 'Make Premium only'}
-                </button>
+              <li key={c.id} className="card chapter-item">
+                <div className="book-head">
+                  <strong>{c.title}</strong>
+                  <span className="status">{c.published ? 'published' : 'draft'}</span>
+                  <span className="status">{c.premium_only ? 'Premium only' : 'Free'}</span>
+                </div>
+                <div className="action-row">
+                  <button type="button" className="btn-secondary" onClick={() => startEdit(c)}>Edit</button>
+                  <button type="button" className="btn-secondary" onClick={() => togglePublish(c)}>
+                    {c.published ? 'Unpublish' : 'Publish'}
+                  </button>
+                  <button type="button" className="btn-secondary" onClick={() => togglePremium(c)}>
+                    {c.premium_only ? 'Make free' : 'Make Premium only'}
+                  </button>
+                </div>
               </li>
             ))}
           </ol>
