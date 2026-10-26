@@ -25,10 +25,9 @@ export default function Book() {
   useEffect(() => {
     let active = true;
     (async () => {
-      // Step 1: the book itself. No embedded relationships, so nothing can be ambiguous.
       const { data: b, error: bookError } = await supabase
         .from('books')
-        .select('id, title, synopsis, cover_url, author_id')
+        .select('id, title, synopsis, cover_url, author_id, credit_name, access_level')
         .eq('id', bookId)
         .maybeSingle();
       if (!active) return;
@@ -38,13 +37,11 @@ export default function Book() {
       }
       if (!b) { setStatus('missing'); return; }
 
-      // Step 2: the author's public name and picture, looked up separately.
       const { data: a } = await supabase
         .from('profiles').select('id, username, avatar_url')
         .eq('id', b.author_id).maybeSingle();
       if (!active) return;
 
-      // Step 3: the chapter list.
       const { data: index, error } = await supabase.rpc('book_chapter_index', { p_book: bookId });
       if (!active) return;
       if (error) {
@@ -80,7 +77,9 @@ export default function Book() {
 
   const fullAccess = Boolean(user) && isVerified;
   const isOwnBook = user && book.author_id === user.id;
+  const creditOnly = Boolean(book.credit_name);
   const authorName = author?.username;
+  const byline = creditOnly ? book.credit_name : authorName;
 
   async function setShelfTo(key) {
     setMessage(null);
@@ -108,9 +107,16 @@ export default function Book() {
   return (
     <article>
       {book.cover_url && <img src={book.cover_url} alt={`Cover of ${book.title}`} className="cover cover-large" />}
-      <h1>{book.title}</h1>
-      {authorName && (
-        <p className="muted">By <Link to={`/author/${authorName}`}>{authorName}</Link></p>
+      <h1>
+        {book.title}{' '}
+        {book.access_level === 'premium' && <span className="status" style={{ verticalAlign: 'middle' }}>Premium book</span>}
+      </h1>
+      {byline && (
+        <p className="muted">
+          By {creditOnly || !authorName
+            ? byline
+            : <Link to={`/author/${authorName}`}>{authorName}</Link>}
+        </p>
       )}
       <p>{book.synopsis}</p>
 
@@ -131,7 +137,7 @@ export default function Book() {
             ))}
             {shelf && <button type="button" className="btn-small" onClick={removeFromLibrary}>Remove</button>}
           </div>
-          {!isOwnBook && authorName && (
+          {!isOwnBook && !creditOnly && authorName && (
             <button type="button" className="btn-secondary" onClick={toggleFollow}>
               {following ? 'Following ' + authorName : 'Follow ' + authorName}
             </button>
@@ -167,7 +173,7 @@ export default function Book() {
 
       {!fullAccess && (
         <p className="card">
-          Guests can read the first three chapters. <Link to={user ? '/settings' : '/register'}>{user ? 'Verify your email' : 'Create a free account'}</Link> to read the rest.
+          Guests can read the first three free chapters. <Link to={user ? '/settings' : '/register'}>{user ? 'Verify your email' : 'Create a free account'}</Link> to read the rest.
         </p>
       )}
 
