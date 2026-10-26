@@ -18,7 +18,7 @@ export function SessionProvider({ children }) {
     }
     const { data: p } = await supabase
       .from('profiles')
-            .select('id, username, display_name, bio, role, suspended, email_verified_at, avatar_url')
+      .select('id, username, display_name, bio, role, suspended, email_verified_at, avatar_url')
       .eq('id', sessionUser.id)
       .maybeSingle();
     setProfile(p ?? null);
