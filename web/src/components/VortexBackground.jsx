@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 // Live vortex theme: the supplied artwork sits behind the site, and a canvas draws
-// particles spiralling inward with faster rotation near the centre.
+// particles spiralling inward, with faster rotation near the centre.
 // Respects prefers-reduced-motion (static artwork only) and pauses in hidden tabs.
 export default function VortexBackground() {
   const canvasRef = useRef(null);
