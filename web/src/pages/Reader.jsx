@@ -41,7 +41,7 @@ export default function Reader() {
     return (
       <section className="card">
         <h1>This chapter is not available to you</h1>
-        <p>Guests can read the first three chapters of each story. <Link to="/register">Create a free account</Link> or <Link to="/login">sign in</Link> to continue, and verify your email to read every chapter.</p>
+        <p>Guests can read the first three free chapters of each story. Premium chapters are for Premium members. <Link to="/register">Create a free account</Link> or <Link to="/login">sign in</Link> to continue.</p>
       </section>
     );
   }
