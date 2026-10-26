@@ -91,26 +91,26 @@ export default function Library() {
         return (
           <section key={shelf.key} className="card">
             <h2>{shelf.label}</h2>
-            <ul>
+            <ul className="book-list">
               {items.map((e) => (
-                <li key={e.book_id} style={{ margin: '.6rem 0' }}>
+                <li key={e.book_id} className="book-item" style={{ marginBottom: '.8rem' }}>
                   {e.books?.status === 'approved' ? (
                     <Link to={`/book/${e.book_id}`}>{e.books.title}</Link>
                   ) : (
                     <span className="muted">This story is no longer available.</span>
-                  )}{' '}
-                  <label htmlFor={`shelf-${e.book_id}`} style={{ display: 'inline', fontWeight: 400 }}>
-                    <span className="muted">Shelf: </span>
-                  </label>
-                  <select
-                    id={`shelf-${e.book_id}`}
-                    value={e.shelf}
-                    onChange={(ev) => changeShelf(e.book_id, ev.target.value)}
-                    style={{ width: 'auto', display: 'inline-block' }}
-                  >
-                    {SHELVES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-                  </select>{' '}
-                  <button type="button" className="btn-small" onClick={() => remove(e.book_id)}>Remove</button>
+                  )}
+                  <div className="action-row">
+                    <label htmlFor={`shelf-${e.book_id}`} className="muted" style={{ alignSelf: 'center' }}>Shelf</label>
+                    <select
+                      id={`shelf-${e.book_id}`}
+                      value={e.shelf}
+                      onChange={(ev) => changeShelf(e.book_id, ev.target.value)}
+                      style={{ width: 'auto' }}
+                    >
+                      {SHELVES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                    </select>
+                    <button type="button" className="btn-small" onClick={() => remove(e.book_id)}>Remove</button>
+                  </div>
                 </li>
               ))}
             </ul>
