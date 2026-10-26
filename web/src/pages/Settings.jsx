@@ -5,6 +5,7 @@ import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
 import { checkImage, uploadImage } from '../lib/media';
 import Avatar from '../components/Avatar.jsx';
+import Wallet from '../components/Wallet.jsx';
 
 const PROVIDERS = [
   { key: 'paypal', label: 'PayPal', example: 'https://paypal.me/yourname' },
@@ -41,15 +42,23 @@ export default function Settings() {
     setMessage(null);
     const problem = checkImage(avatarFile, 'avatars');
     if (problem) { setMessage({ type: 'error', text: problem }); return; }
+    // Check the balance before uploading, so a refused change leaves no file behind.
+    if (profile?.role !== 'admin' && !premium) {
+      const { data: balance } = await supabase.rpc('coin_balance');
+      if ((balance ?? 0) < 100) {
+        setMessage({ type: 'error', text: 'A new profile picture costs 100 coins. Premium members upload for free.' });
+        return;
+      }
+    }
     try {
       const url = await uploadImage('avatars', user.id, 'avatar', avatarFile);
-      const { error } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id);
+      const { error } = await supabase.rpc('set_avatar_with_charge', { p_url: url });
       if (error) throw error;
       setAvatarFile(null);
       setMessage({ type: 'ok', text: 'Profile picture saved.' });
       refreshAccount();
-    } catch {
-      setMessage({ type: 'error', text: 'The picture could not be saved. Please try again.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: friendly(err) });
     }
   }
 
@@ -119,13 +128,11 @@ export default function Settings() {
         <h2>Profile</h2>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
           <Avatar url={profile?.avatar_url} name={profile?.username} size={80} />
-          <div>
-            <p className="muted" style={{ margin: 0 }}>Username: <strong>{profile?.username}</strong> (cannot be changed)</p>
-          </div>
+          <p className="muted" style={{ margin: 0 }}>Username: <strong>{profile?.username}</strong> (cannot be changed)</p>
         </div>
 
         <form onSubmit={saveAvatar} style={{ marginBottom: '1.5rem' }}>
-          <label htmlFor="avatar">Profile picture (JPG, PNG or WebP, up to 2 MB)</label>
+          <label htmlFor="avatar">Profile picture (JPG, PNG or WebP, up to 2 MB). Costs 100 coins; free for Premium members.</label>
           <input id="avatar" type="file" accept="image/jpeg,image/png,image/webp"
             onChange={(e) => setAvatarFile(e.target.files?.[0] ?? null)} />
           <p><button type="submit" disabled={!avatarFile}>Upload picture</button></p>
@@ -141,6 +148,8 @@ export default function Settings() {
           <p><button type="submit">Save profile</button></p>
         </form>
       </section>
+
+      <Wallet />
 
       <section className="card">
         <h2>Support links</h2>
