@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
+import CoinPremium from '../components/CoinPremium.jsx';
 
-// The only place where members are sent to the payment page. Verification is manual (see spec, section 8).
+// The only place where members are sent to the payment page. Verification is manual.
 const KOFI_URL = 'https://ko-fi.com/s/3b87d440a9';
 
 export default function Premium() {
@@ -54,8 +55,10 @@ export default function Premium() {
   return (
     <section>
       <h1>Premium</h1>
-      <p className="muted">Premium adds expanded themes, Premium author notes and theory sections, and offline downloads of individual chapters.</p>
+      <p className="muted">Premium adds Premium-only chapters and books, free profile pictures, and extra chat messages.</p>
       {premium && <p className="card ok">You currently have Premium. Thank you for supporting Vortex of Stories.</p>}
+
+      <CoinPremium />
 
       <h2>Choose a package</h2>
       <div className="grid">
