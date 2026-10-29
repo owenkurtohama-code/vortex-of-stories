@@ -13,6 +13,7 @@ import Admin from './pages/Admin.jsx';
 import Library from './pages/Library.jsx';
 import AuthorProfile from './pages/AuthorProfile.jsx';
 import Settings from './pages/Settings.jsx';
+import GeneralBooks from './pages/GeneralBooks.jsx';
 
 function Header() {
   const { user, profile, premium, signOut } = useSession();
@@ -25,6 +26,7 @@ function Header() {
         {user && <NavLink to="/library">Library</NavLink>}
         <NavLink to="/premium">Premium</NavLink>
         {user && <NavLink to="/studio">Author Studio</NavLink>}
+        {profile?.role === 'admin' && <NavLink to="/general">General books</NavLink>}
         {profile?.role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
       </nav>
       <div className="account">
@@ -85,6 +87,7 @@ export default function App() {
           <Route path="/premium" element={<Premium />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/studio" element={<Studio />} />
+          <Route path="/general" element={<GeneralBooks />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
