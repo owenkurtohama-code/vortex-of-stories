@@ -152,6 +152,12 @@ textarea { min-height: 7rem; resize: vertical; }
 /* ---------- Coins ---------- */
 .coin-balance { font-size: 2.2rem; font-weight: 700; margin: .25rem 0 .75rem; }
 
+/* ---------- Private messages, tags and badges ---------- */
+.badge { display: inline-block; min-width: 1.3rem; padding: 0 .4rem; margin-left: .3rem; border-radius: 999px; background: var(--accent); color: #fff; font-size: .75rem; line-height: 1.3rem; text-align: center; }
+.mention { font-weight: 600; text-decoration: none; }
+.mention:hover { text-decoration: underline; }
+.deleted { font-style: italic; color: var(--muted); }
+
 /* ---------- Accessibility and motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
