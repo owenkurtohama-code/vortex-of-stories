@@ -4,8 +4,10 @@ import { useSession } from '../lib/session.jsx';
 import { friendly } from '../lib/errors';
 import Avatar from '../components/Avatar.jsx';
 import Riddles from '../components/Riddles.jsx';
+import MessageText from '../components/MessageText.jsx';
 
-// Community chat. Your own messages appear on the right. Closed riddles appear as reveal cards in time order.
+// Community chat. Your own messages appear on the right. Tags (@name) link to profiles.
+// Closed riddles appear as reveal cards in time order.
 export default function Chat() {
   const { user, profile, isVerified } = useSession();
   const [messages, setMessages] = useState(null);
@@ -43,6 +45,9 @@ export default function Chat() {
       return data ? { ...data, id: r.id, closed_at: r.closed_at } : null;
     }));
     setReveals(found.filter(Boolean));
+
+    // Opening the community chat clears the tag badge.
+    if (user && isVerified) await supabase.rpc('mark_mentions_seen');
   }
 
   useEffect(() => { load(); }, []);
@@ -96,7 +101,10 @@ export default function Chat() {
   return (
     <section>
       <h1>Community chat</h1>
-      <p className="muted">Main chat. Registered, verified members can send 10 messages per day (UTC). Guests can read.</p>
+      <p className="muted">
+        Main chat. Registered, verified members can send 10 messages per day (UTC). Guests can read.
+        Type @ and a username to tag someone.
+      </p>
 
       <Riddles canAnswer={canPost} isAdmin={profile?.role === 'admin'} />
 
@@ -156,7 +164,7 @@ export default function Chat() {
                   <strong>{own ? 'You' : (m.person?.username ?? 'Member')}</strong>
                   <span> · {new Date(m.created_at).toLocaleString()}</span>
                 </div>
-                <div className="chat-text">{m.body}</div>
+                <div className="chat-text"><MessageText text={m.body} /></div>
                 {user && !own && (
                   <button type="button" className="btn-small chat-report" onClick={() => report(m.id)}>Report</button>
                 )}
