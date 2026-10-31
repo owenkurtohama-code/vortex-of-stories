@@ -51,11 +51,7 @@ const MESSAGES = {
   question_invalid: 'Please enter a question of up to 500 characters.',
   limit_invalid: 'The winner limit must be between 1 and 100.',
   answer_required: 'Please enter an answer.',
-  'book must be approved': 'Chapters can be published only after the book is approved.',
-  'author cannot be changed': 'That change is not allowed.',
-  'status change not permitted': 'That status change is not allowed.',
-  'review reason is set by administrators': 'Only administrators can set a review reason.',
-    cannot_friend_self: 'You cannot send a friend request to yourself.',
+  cannot_friend_self: 'You cannot send a friend request to yourself.',
   unblock_first: 'You have blocked this member. Unblock them first to send a request.',
   request_not_possible: 'This request could not be sent.',
   already_friends: 'You are already friends.',
@@ -65,6 +61,15 @@ const MESSAGES = {
   request_not_pending: 'That request is no longer waiting for an answer.',
   cannot_block_self: 'You cannot block yourself.',
   reason_too_long: 'The reason must be 300 characters or fewer.',
+  not_friends: 'You can only message members who are your friends.',
+  message_not_possible: 'This message could not be sent.',
+  conversation_not_found: 'That conversation could not be found.',
+  message_not_found: 'That message could not be found.',
+  cannot_message_self: 'You cannot message yourself.',
+  'book must be approved': 'Chapters can be published only after the book is approved.',
+  'author cannot be changed': 'That change is not allowed.',
+  'status change not permitted': 'That status change is not allowed.',
+  'review reason is set by administrators': 'Only administrators can set a review reason.',
 };
 
 // Longer keys are checked first, so that for example "user_not_found" is not read as "not_found".
@@ -75,4 +80,3 @@ export function friendly(error) {
   const key = KEYS.find((k) => text.includes(k));
   return key ? MESSAGES[key] : 'Something went wrong. Please try again.';
 }
-
