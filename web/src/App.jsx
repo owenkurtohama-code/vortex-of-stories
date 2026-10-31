@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Link, NavLink, Navigate } from 'react-router-dom';
+import { supabase } from './lib/supabase';
 import { useSession } from './lib/session.jsx';
 import VortexBackground from './components/VortexBackground.jsx';
 import InstallApp from './components/InstallApp.jsx';
@@ -15,17 +17,38 @@ import AuthorProfile from './pages/AuthorProfile.jsx';
 import Settings from './pages/Settings.jsx';
 import GeneralBooks from './pages/GeneralBooks.jsx';
 import Friends from './pages/Friends.jsx';
+import PrivateChat from './pages/PrivateChat.jsx';
+
+function Badge({ count }) {
+  if (!count) return null;
+  return <span className="badge" aria-label={`${count} new`}>{count}</span>;
+}
 
 function Header() {
   const { user, profile, premium, isVerified, signOut } = useSession();
+  const [counts, setCounts] = useState({ mentions: 0, private: 0 });
+
+  // Refresh the header badges every minute while signed in.
+  useEffect(() => {
+    if (!user || !isVerified) { setCounts({ mentions: 0, private: 0 }); return undefined; }
+    let active = true;
+    const fetchCounts = async () => {
+      const { data } = await supabase.rpc('notification_counts');
+      if (active && data) setCounts({ mentions: data.mentions ?? 0, private: data.private ?? 0 });
+    };
+    fetchCounts();
+    const timer = setInterval(fetchCounts, 60000);
+    return () => { active = false; clearInterval(timer); };
+  }, [user, isVerified]);
+
   return (
     <header className="site-header">
       <Link to="/" className="brand">Vortex of Stories</Link>
       <nav aria-label="Main">
         <NavLink to="/">Stories</NavLink>
-        <NavLink to="/chat">Community</NavLink>
+        <NavLink to="/chat">Community <Badge count={counts.mentions} /></NavLink>
         {user && <NavLink to="/library">Library</NavLink>}
-        {user && isVerified && <NavLink to="/friends">Friends</NavLink>}
+        {user && isVerified && <NavLink to="/friends">Friends <Badge count={counts.private} /></NavLink>}
         <NavLink to="/premium">Premium</NavLink>
         {user && <NavLink to="/studio">Author Studio</NavLink>}
         {profile?.role === 'admin' && <NavLink to="/general">General books</NavLink>}
@@ -84,6 +107,7 @@ export default function App() {
           <Route path="/author/:username" element={<AuthorProfile />} />
           <Route path="/library" element={<Library />} />
           <Route path="/friends" element={<Friends />} />
+          <Route path="/private/:friendId" element={<PrivateChat />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
