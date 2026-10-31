@@ -55,6 +55,16 @@ const MESSAGES = {
   'author cannot be changed': 'That change is not allowed.',
   'status change not permitted': 'That status change is not allowed.',
   'review reason is set by administrators': 'Only administrators can set a review reason.',
+    cannot_friend_self: 'You cannot send a friend request to yourself.',
+  unblock_first: 'You have blocked this member. Unblock them first to send a request.',
+  request_not_possible: 'This request could not be sent.',
+  already_friends: 'You are already friends.',
+  they_already_asked: 'This member has already sent you a request. Check your requests to accept it.',
+  request_already_pending: 'You have already sent a request to this member.',
+  request_not_found: 'That request could not be found.',
+  request_not_pending: 'That request is no longer waiting for an answer.',
+  cannot_block_self: 'You cannot block yourself.',
+  reason_too_long: 'The reason must be 300 characters or fewer.',
 };
 
 // Longer keys are checked first, so that for example "user_not_found" is not read as "not_found".
@@ -65,13 +75,4 @@ export function friendly(error) {
   const key = KEYS.find((k) => text.includes(k));
   return key ? MESSAGES[key] : 'Something went wrong. Please try again.';
 }
-  cannot_friend_self: 'You cannot send a friend request to yourself.',
-  unblock_first: 'You have blocked this member. Unblock them first to send a request.',
-  request_not_possible: 'This request could not be sent.',
-  already_friends: 'You are already friends.',
-  they_already_asked: 'This member has already sent you a request. Check your requests to accept it.',
-  request_already_pending: 'You have already sent a request to this member.',
-  request_not_found: 'That request could not be found.',
-  request_not_pending: 'That request is no longer waiting for an answer.',
-  cannot_block_self: 'You cannot block yourself.',
-  reason_too_long: 'The reason must be 300 characters or fewer.',
+
