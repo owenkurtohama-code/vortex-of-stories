@@ -14,9 +14,10 @@ import Library from './pages/Library.jsx';
 import AuthorProfile from './pages/AuthorProfile.jsx';
 import Settings from './pages/Settings.jsx';
 import GeneralBooks from './pages/GeneralBooks.jsx';
+import Friends from './pages/Friends.jsx';
 
 function Header() {
-  const { user, profile, premium, signOut } = useSession();
+  const { user, profile, premium, isVerified, signOut } = useSession();
   return (
     <header className="site-header">
       <Link to="/" className="brand">Vortex of Stories</Link>
@@ -24,6 +25,7 @@ function Header() {
         <NavLink to="/">Stories</NavLink>
         <NavLink to="/chat">Community</NavLink>
         {user && <NavLink to="/library">Library</NavLink>}
+        {user && isVerified && <NavLink to="/friends">Friends</NavLink>}
         <NavLink to="/premium">Premium</NavLink>
         {user && <NavLink to="/studio">Author Studio</NavLink>}
         {profile?.role === 'admin' && <NavLink to="/general">General books</NavLink>}
@@ -81,6 +83,7 @@ export default function App() {
           <Route path="/read/:chapterId" element={<Reader />} />
           <Route path="/author/:username" element={<AuthorProfile />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/friends" element={<Friends />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
